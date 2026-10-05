@@ -8,6 +8,11 @@
   const $ = (id) => document.getElementById(id);
   const intro = $('intro'), playBtn = $('play'), canvas = $('game'), ctx = canvas.getContext('2d');
   const endBox = $('end'), endTitle = $('endTitle'), hint = $('hint');
+  const hud = $('hud'), startBox = $('start'), nameIn = $('name');
+  let playerName = '';
+  try { playerName = localStorage.getItem('ateniaName') || ''; } catch (e) {}
+  nameIn.value = playerName;
+  ['mePips', 'aiPips'].forEach((id) => { $(id).innerHTML = '<i></i>'.repeat(WIN_SCORE); });
 
   setTimeout(() => playBtn.classList.add('show'), INTRO_MS);
 
@@ -30,10 +35,28 @@
       P.y = ry(P.y); AI.y = ry(AI.y);
       ball.x = field.x + (ball.x - old.x) / old.w * field.w; ball.y = ry(ball.y);
     }
+    placeHud();
     P = Object.assign(P || { y: field.y + fh / 2 - ph / 2 }, sizes, { x: field.x + 22 });
     AI = Object.assign(AI || { y: field.y + fh / 2 - ph / 2 }, sizes, { x: field.x + fw - 22 - pw });
     ball = ball || { x: field.x + fw / 2, y: field.y + fh / 2, vx: 0, vy: 0, spin: 0 };
     ball.r = Math.max(16, fw * 0.028);
+  }
+
+  // ---------- marcador ----------
+  function placeHud() {
+    hud.style.left = field.x + 'px'; hud.style.width = field.w + 'px';
+    hud.style.bottom = (H - field.y + 12) + 'px';
+  }
+  function renderHud(scored) {
+    const name = playerName || 'Tú';
+    $('meName').textContent = name; $('meInitial').textContent = name[0].toUpperCase();
+    $('meScore').textContent = score.p; $('aiScore').textContent = score.ai;
+    [['mePips', score.p, 'p'], ['aiPips', score.ai, 'ai']].forEach(([id, n, who]) => {
+      [...$(id).children].forEach((el, i) => {
+        el.classList.toggle('on', i < n);
+        if (scored === who && i === n - 1) { el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 300); }
+      });
+    });
   }
 
   // ---------- dibujo ----------
@@ -80,13 +103,6 @@
     ctx.setLineDash([10, 12]);
     ctx.beginPath(); ctx.moveTo(field.x + field.w / 2, field.y + 14); ctx.lineTo(field.x + field.w / 2, field.y + field.h - 14); ctx.stroke();
     ctx.setLineDash([]);
-    const fs = Math.max(26, Math.min(60, field.w * 0.06));
-    ctx.font = `700 ${fs}px Poppins, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillStyle = NAVY; ctx.fillText(score.p, field.x + field.w * 0.25, field.y - 8);
-    ctx.fillStyle = TEAL; ctx.fillText(score.ai, field.x + field.w * 0.75, field.y - 8);
-    ctx.font = `600 13px Poppins, system-ui, sans-serif`; ctx.fillStyle = GREY; ctx.textBaseline = 'top';
-    ctx.fillText('TÚ', field.x + field.w * 0.25, field.y + 12);
-    ctx.fillText('IA', field.x + field.w * 0.75, field.y + 12);
     ctx.globalAlpha = 1;
   }
 
@@ -145,7 +161,9 @@
       });
       if (raw < 1) return requestAnimationFrame(morph);
       intro.classList.add('gone');
-      startGame();
+      draw();
+      startBox.classList.add('show');
+      setTimeout(() => nameIn.focus(), 300);
     }
     requestAnimationFrame(morph);
   });
@@ -159,10 +177,18 @@
     ball.vx = Math.cos(ang) * sp * dir; ball.vy = Math.sin(ang) * sp; ball.spin = 0;
     serveAt = performance.now() + 800;
   }
+  startBox.addEventListener('submit', (e) => {
+    e.preventDefault();
+    playerName = nameIn.value.trim().slice(0, 14);
+    try { localStorage.setItem('ateniaName', playerName); } catch (err) {}
+    startBox.classList.remove('show'); nameIn.blur();
+    startGame();
+  });
   function startGame() {
     score.p = score.ai = 0;
+    renderHud(); hud.classList.add('show');
     endBox.classList.remove('show');
-    hint.classList.add('show'); setTimeout(() => hint.classList.remove('show'), 3500);
+    hint.classList.add('show'); setTimeout(() => hint.classList.remove('show'), 4500);
     serve(Math.random() < .5 ? -1 : 1);
     running = true; last = performance.now();
     requestAnimationFrame(loop);
@@ -178,9 +204,10 @@
   }
   function point(who) {
     score[who]++;
+    renderHud(who);
     if (score.p >= WIN_SCORE || score.ai >= WIN_SCORE) {
       running = false;
-      endTitle.textContent = score.p > score.ai ? '¡Has ganado!' : 'Gana la IA';
+      endTitle.textContent = score.p > score.ai ? `¡Has ganado${playerName ? ', ' + playerName : ''}!` : 'Gana la IA';
       $('endScore').textContent = `${score.p} – ${score.ai}`;
       endBox.classList.add('show');
       draw();
@@ -234,7 +261,7 @@
   addEventListener('mousemove', setPointer);
   addEventListener('touchstart', setPointer, { passive: true });
   addEventListener('touchmove', (e) => { setPointer(e); if (running) e.preventDefault(); }, { passive: false });
-  addEventListener('keydown', (e) => { keys[e.key] = true; if (e.key.startsWith('Arrow') && running) e.preventDefault(); });
+  addEventListener('keydown', (e) => { if (e.target === nameIn) return; keys[e.key] = true; if (e.key.startsWith('Arrow') && running) e.preventDefault(); });
   addEventListener('keyup', (e) => { keys[e.key] = false; });
   addEventListener('resize', () => { if (field) { layout(); if (!running) draw(); } });
   $('again').addEventListener('click', startGame);

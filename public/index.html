@@ -33,6 +33,42 @@
   #end h2{margin:0;font-size:28px}
   #endScore{color:var(--grey);margin:6px 0 20px;font-weight:600}
   #end .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  #start{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%);width:min(92vw,420px);background:#fff;border-radius:24px;padding:28px 28px 24px;
+         text-align:center;box-shadow:0 24px 60px rgba(19,41,75,.2);opacity:0;pointer-events:none;transition:opacity .4s,transform .4s}
+  #start.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+  #start h2{margin:0 0 4px;font-size:26px}
+  #start .lead{margin:0 0 14px;color:var(--grey);font-size:15px;line-height:1.5}
+  #start .lead b{color:var(--navy)}
+  .goal{display:flex;justify-content:center;gap:6px;margin:0 0 18px}
+  .goal i{width:12px;height:12px;border-radius:50%;background:var(--green);opacity:.25;animation:pip 2.4s infinite}
+  .goal i:nth-child(2){animation-delay:.2s}.goal i:nth-child(3){animation-delay:.4s}.goal i:nth-child(4){animation-delay:.6s}.goal i:nth-child(5){animation-delay:.8s}
+  @keyframes pip{0%,100%{opacity:.25}40%,70%{opacity:1}}
+  #start label{display:block;text-align:left;font-size:13px;font-weight:600;color:var(--grey);margin:0 0 6px}
+  #name{width:100%;font:600 17px Poppins,system-ui,sans-serif;color:var(--navy);padding:12px 16px;border:2px solid #D5DCE3;border-radius:14px;outline:0;background:var(--bg);transition:border-color .15s}
+  #name:focus{border-color:var(--teal);background:#fff}
+  .controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px 0 20px}
+  .ctl{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--grey)}
+  kbd{display:inline-grid;place-items:center;min-width:28px;height:28px;padding:0 6px;border-radius:7px;background:#fff;color:var(--navy);
+      font:700 15px Poppins,system-ui,sans-serif;box-shadow:inset 0 -3px 0 #D5DCE3,0 0 0 1.5px #D5DCE3}
+  .ctl svg{width:18px;height:18px;stroke:var(--navy);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #start .btn{width:100%}
+  #hud{position:fixed;display:flex;justify-content:space-between;align-items:center;gap:12px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #hud.show{opacity:1}
+  .side{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:8px 16px 8px 8px;box-shadow:0 6px 18px rgba(19,41,75,.1);min-width:0}
+  .side.ai{flex-direction:row-reverse;padding:8px 8px 8px 16px}
+  .avatar{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:#fff;font-weight:700;font-size:16px}
+  .side.me .avatar{background:var(--navy)}.side.ai .avatar{background:var(--teal)}
+  .who{min-width:0}.side.ai .who{text-align:right}
+  .who .n{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22vw}
+  .pips{display:flex;gap:4px;margin-top:4px}.side.ai .pips{justify-content:flex-end}
+  .pips i{width:10px;height:10px;border-radius:50%;background:#E3E8EE;transition:background .3s,transform .3s}
+  .side.me .pips i.on{background:var(--navy)}.side.ai .pips i.on{background:var(--teal)}
+  .pips i.pop{transform:scale(1.6)}
+  .big{font-weight:700;font-size:30px;line-height:1;min-width:26px;text-align:center}
+  .side.me .big{color:var(--navy)}.side.ai .big{color:var(--teal)}
+  .vs{font-size:12px;font-weight:700;color:var(--grey);letter-spacing:.08em;white-space:nowrap}
+  #hint{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
+  @media (max-width:520px){.vs{display:none}.big{font-size:24px}.avatar{width:32px;height:32px;font-size:13px}.side{gap:8px}}
   @media (prefers-reduced-motion:reduce){#logo *{animation-duration:.01s!important;animation-delay:0s!important}}
 </style>
 </head>
@@ -143,7 +179,24 @@
 <button id="play" class="btn">Jugar</button>
 </main>
 <canvas id="game" aria-label="Pong contra la IA"></canvas>
-<p id="hint">Mueve el ratón, desliza el dedo o usa ↑ ↓ para mover tu pala. Primero en llegar a 5 gana.</p>
+<div id="hud" aria-live="polite">
+  <div class="side me"><div class="avatar" id="meInitial">T</div><div class="who"><div class="n" id="meName">Tú</div><div class="pips" id="mePips"></div></div><div class="big" id="meScore">0</div></div>
+  <div class="vs">A 5 PUNTOS</div>
+  <div class="side ai"><div class="avatar">IA</div><div class="who"><div class="n">Atenia IA</div><div class="pips" id="aiPips"></div></div><div class="big" id="aiScore">0</div></div>
+</div>
+<form id="start" autocomplete="off">
+  <h2>Partida a 5 puntos</h2>
+  <p class="lead">Juegas contra la IA de Atenia. <b>El primero que llegue a 5 puntos gana.</b></p>
+  <div class="goal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <label for="name">¿Cómo te llamas?</label>
+  <input id="name" maxlength="14" placeholder="Tu nombre" autocapitalize="words" spellcheck="false">
+  <div class="controls" aria-label="Controles">
+    <span class="ctl"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v4"/></svg>Ratón o dedo</span>
+    <span class="ctl"><kbd>↑</kbd><kbd>↓</kbd>Flechas</span>
+  </div>
+  <button class="btn" type="submit">Empezar</button>
+</form>
+<p id="hint"><span>Mueve tu pala con el ratón, el dedo o las flechas</span><kbd>↑</kbd><kbd>↓</kbd></p>
 <div id="end" role="dialog" aria-live="polite">
   <h2 id="endTitle"></h2><p id="endScore"></p>
   <div class="row"><button id="again" class="btn">Revancha</button><button id="home" class="btn ghost">Ver el logo</button></div>
