@@ -38,8 +38,8 @@
     placeHud();
     P = Object.assign(P || { y: field.y + fh / 2 - ph / 2 }, sizes, { x: field.x + 22 });
     AI = Object.assign(AI || { y: field.y + fh / 2 - ph / 2 }, sizes, { x: field.x + fw - 22 - pw });
-    ball = ball || { x: field.x + fw / 2, y: field.y + fh / 2, vx: 0, vy: 0 };
-    ball.r = Math.max(7, fw * 0.012);
+    ball = ball || { x: field.x + fw / 2, y: field.y + fh / 2, vx: 0, vy: 0, spin: 0 };
+    ball.r = Math.max(16, fw * 0.028);
   }
 
   // ---------- marcador ----------
@@ -72,9 +72,32 @@
     rr(cx - a / 2, cy - t / 2, a, t, t * 0.3, BG);
     ctx.globalAlpha = 1;
   }
-  function drawBall(x, y, r, glow = 1) {
+  // el ojo del logo, que en la transición salta hasta el centro del campo
+  function drawEye(x, y, r, glow = 1) {
     ctx.save(); ctx.shadowColor = GREEN; ctx.shadowBlur = 18 * glow;
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = GREEN; ctx.fill(); ctx.restore();
+  }
+  // la pelota es el icono del robot tal y como está en el logo (coordenadas de la placa de 140×140 del SVG original)
+  const ROBOT = {
+    head: { x: 48.5, y: 18, w: 43, h: 22.6, r: 11.3, c: NAVY },
+    eyeL: { x: 57.5, y: 25.3, w: 8, h: 8, r: 4, c: GREEN },
+    eyeR: { x: 74.5, y: 25.3, w: 8, h: 8, r: 4, c: GREEN },
+    body: { x: 57.6, y: 46.3, w: 24.9, h: 61, r: 5.7, c: NAVY },
+    cv: { x: 67.2, y: 55.3, w: 5.7, h: 15.8, r: 1.4, c: '#FFFFFF' },
+    ch: { x: 62.1, y: 60.4, w: 15.8, h: 5.7, r: 1.4, c: '#FFFFFF' },
+    base: { x: 38.3, y: 113, w: 63.3, h: 9, r: 4.5, c: TEAL },
+  };
+  const PIECES = ['base', 'body', 'cv', 'ch', 'head', 'eyeL', 'eyeR'];   // orden de pintado
+  function drawBall(x, y, r, spin = 0, glow = 0, alpha = 1) {
+    ctx.save(); ctx.globalAlpha = alpha;
+    ctx.translate(x, y); ctx.rotate(spin); ctx.scale(r * 2 / 140, r * 2 / 140); ctx.translate(-70, -70);
+    ctx.save();
+    if (glow > 0) { ctx.shadowColor = GREEN; ctx.shadowBlur = 22 * glow; }
+    ctx.beginPath(); ctx.roundRect(0, 0, 140, 140, 32); ctx.fillStyle = '#FFFFFF'; ctx.fill();
+    ctx.shadowBlur = 0; ctx.lineWidth = 3; ctx.strokeStyle = '#D5DCE3'; ctx.stroke();
+    ctx.restore();
+    for (const k of PIECES) { const p = ROBOT[k]; rr(p.x, p.y, p.w, p.h, p.r, p.c); }
+    ctx.restore();
   }
   function drawField(alpha) {
     ctx.globalAlpha = alpha;
@@ -120,7 +143,10 @@
       drawPlayer(b.x, b.y, b.w, b.h, 1);
       rr(s.x, s.y, s.w, s.h, Math.min(s.w, s.h) / 2, TEAL);
       // el ojo da un saltito antes de convertirse en pelota
-      drawBall(e.x + e.w / 2, e.y + e.h / 2 - Math.sin(t * Math.PI) * 60, e.w / 2, t);
+      // ...y al aterrizar se convierte en el logo
+      const ex = e.x + e.w / 2, ey = e.y + e.h / 2 - Math.sin(t * Math.PI) * 60, logoA = Math.max(0, (raw - .7) / .3);
+      if (logoA < 1) drawEye(ex, ey, e.w / 2 * (1 - logoA * .3), t);
+      if (logoA > 0) drawBall(ex, ey, e.w / 2, (1 - logoA) * Math.PI, logoA, logoA);
       if (raw < 1) return requestAnimationFrame(morph);
       intro.classList.add('gone');
       draw();
@@ -136,7 +162,7 @@
     ball.x = field.x + field.w / 2; ball.y = field.y + field.h / 2;
     const ang = (Math.random() * 0.6 - 0.3);
     const sp = field.w * 0.55;
-    ball.vx = Math.cos(ang) * sp * dir; ball.vy = Math.sin(ang) * sp;
+    ball.vx = Math.cos(ang) * sp * dir; ball.vy = Math.sin(ang) * sp; ball.spin = 0;
     serveAt = performance.now() + 800;
   }
   startBox.addEventListener('submit', (e) => {
@@ -162,7 +188,7 @@
     ball.vx = Math.cos(ang) * sp * dir; ball.vy = Math.sin(ang) * sp;
     ball.x = dir > 0 ? p.x + p.w + ball.r : p.x - ball.r;
     aiErr = (Math.random() - .5) * p.h * 0.9;                     // la IA no es perfecta
-    flash = 1;
+    flash = 1.4;
   }
   function point(who) {
     score[who]++;
@@ -192,6 +218,7 @@
     clampP(AI);
     if (now < serveAt) return;
     ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+    ball.spin += Math.sign(ball.vx) * dt * 4;
     if (ball.y - ball.r < field.y) { ball.y = field.y + ball.r; ball.vy = Math.abs(ball.vy); }
     if (ball.y + ball.r > field.y + field.h) { ball.y = field.y + field.h - ball.r; ball.vy = -Math.abs(ball.vy); }
     if (ball.vx < 0 && ball.x - ball.r <= P.x + P.w && ball.x > P.x && ball.y > P.y - ball.r && ball.y < P.y + P.h + ball.r) hitPaddle(P, 1);
@@ -205,7 +232,7 @@
     drawPlayer(P.x, P.y, P.w, P.h);
     rr(AI.x, AI.y, AI.w, AI.h, AI.w / 2, TEAL);
     const visible = running && performance.now() >= serveAt - 400;
-    if (visible) drawBall(ball.x, ball.y, ball.r, 1 + flash);
+    if (visible) drawBall(ball.x, ball.y, ball.r, ball.spin, flash);
     flash = Math.max(0, flash - 0.08);
   }
   function loop() {
