@@ -23,7 +23,6 @@ Texto del documento. Los títulos de primer nivel empiezan página y llevan el n
 - Otro punto con `código en línea`
 
 #nota(titulo: "Nota")[Recuadro informativo en teal.]
-#nota(tipo: "ok", titulo: "Hecho")[Recuadro en verde para resultados o confirmaciones.]
 #nota(tipo: "aviso", titulo: "Atención")[Recuadro en azul marino para avisos.]
 
 == Una tabla
@@ -32,12 +31,12 @@ Texto del documento. Los títulos de primer nivel empiezan página y llevan el n
   columns: (auto, 1fr),
   table.header[Columna][Descripción],
   [Fila 1], [La cabecera es azul marino y las filas alternan con el fondo claro.],
-  [Fila 2], [#chip[etiqueta] #chip(color: verde)[otra]],
+  [Fila 2], [#chip[etiqueta] #chip(color: azul)[otra]],
 )
 
 == Colores de la marca
 
-#paleta(("Azul marino", azul), ("Teal", teal), ("Verde", verde), ("Gris", gris), ("Fondo", fondo))
+#paleta(("Azul marino", azul), ("Teal", teal), ("Gris", gris), ("Fondo", fondo))
 
 // Para una figura con captura:
 // #captura("capturas/mi-captura.png")[Pie de la figura.]

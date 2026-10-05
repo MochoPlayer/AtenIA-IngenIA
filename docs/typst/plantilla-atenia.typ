@@ -5,7 +5,6 @@
 // ---------- marca ----------
 #let azul = rgb("#13294B")
 #let teal = rgb("#12A39A")
-#let verde = rgb("#22C55E")
 #let gris = rgb("#5C6B7A")
 #let fondo = rgb("#F7F9FB")
 #let borde = rgb("#D5DCE3")
@@ -19,9 +18,9 @@
 
 // ---------- componentes ----------
 
-/// Recuadro destacado. tipo: "info" (teal), "ok" (verde) o "aviso" (azul).
+/// Recuadro destacado. tipo: "info" (teal) o "aviso" (azul marino).
 #let nota(tipo: "info", titulo: none, cuerpo) = {
-  let color = if tipo == "ok" { verde } else if tipo == "aviso" { azul } else { teal }
+  let color = if tipo == "aviso" { azul } else { teal }
   block(
     width: 100%, inset: (x: 14pt, y: 11pt), radius: 6pt,
     fill: color.lighten(90%), stroke: (left: 3pt + color),
@@ -126,7 +125,7 @@
       text(size: 21pt, it.body),
     )
     v(2pt)
-    line(length: 100%, stroke: 2pt + verde.lighten(40%))
+    line(length: 100%, stroke: 2pt + teal.lighten(55%))
     v(8pt)
   }
   show heading.where(level: 2): it => block(sticky: true, above: 18pt, below: 10pt, text(size: 13.5pt, {
@@ -166,7 +165,6 @@
     page(header: none, footer: none, margin: 0pt, {
       place(top + left, rect(width: 100%, height: 0.55cm, fill: azul))
       place(top + left, dy: 0.55cm, rect(width: 100%, height: 0.14cm, fill: teal))
-      place(top + left, dy: 0.69cm, rect(width: 100%, height: 0.07cm, fill: verde))
       place(top + left, dx: 2.4cm, dy: 4.2cm, logo(width: 9.5cm))
       place(top + left, dx: 2.4cm, dy: 11.4cm, block(width: 15.5cm, {
         set par(justify: false)
@@ -174,7 +172,7 @@
         text(size: 32pt, weight: "semibold", fill: azul, titulo)
         if subtitulo != none { v(2pt); text(size: 14pt, fill: gris, subtitulo) }
         v(16pt)
-        line(length: 4cm, stroke: 3pt + verde)
+        line(length: 4cm, stroke: 3pt + teal)
       }))
       place(bottom + left, dx: 2.4cm, dy: -2.6cm, grid(
         columns: (auto, auto), column-gutter: 14pt, row-gutter: 7pt,
