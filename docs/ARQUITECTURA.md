@@ -73,7 +73,7 @@ Al pulsar **Jugar** (`playBtn` en `game.js`):
    - las palas crecen desde su centro;
    - el campo y el marcador aparecen poco a poco;
    - la placa blanca de la pelota aparece detrás de las piezas.
-7. Al terminar, se oculta la intro (`#intro.gone`) y se llama a `startGame()`.
+7. Al terminar, se oculta la intro (`#intro.gone`) y aparece la tarjeta de inicio (`#start`): reglas, campo para el nombre y controles. Al enviarla, el nombre se guarda en `localStorage` (`ateniaName`, máximo 14 caracteres) y se llama a `startGame()`.
 
 ## Juego
 
@@ -85,6 +85,9 @@ Todo el estado vive en `game.js`, dentro de una función que se ejecuta al carga
 | `P`, `AI` | palas: `{x, y, w, h}` |
 | `ball` | `{x, y, vx, vy, r, spin}` |
 | `score` | `{p, ai}` |
+| `playerName` | nombre del jugador, guardado en `localStorage` |
+
+**Marcador.** Es HTML (`#hud`), colocado justo encima del campo por `placeHud()`. `renderHud()` actualiza el nombre, la inicial, los puntos y los cinco indicadores de cada lado.
 
 **Bucle.** `loop()` se ejecuta con `requestAnimationFrame` y llama a `step(dt)` y luego a `draw()`. El tiempo sale de `performance.now()` y `dt` se limita a 33 ms, para que la pelota no atraviese las palas tras una pausa.
 
@@ -115,7 +118,7 @@ Todo el estado vive en `game.js`, dentro de una función que se ejecuta al carga
 `firebase.json`:
 
 - **`public`:** la carpeta publicada, sin paso de compilación.
-- **`headers`:** caché de 1 h para `.js` y `.css`.
+- **`headers`:** `Cache-Control: no-cache` en todos los archivos, para que cada despliegue se vea al momento.
 - **`emulators.hosting.port`:** 5050 para desarrollo local. La interfaz web del emulador está desactivada.
 
 `.firebaserc` fija el proyecto por defecto, `atenia-ingenia`. La web publicada está en <https://atenia-ingenia.web.app>.

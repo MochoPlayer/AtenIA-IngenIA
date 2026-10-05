@@ -8,6 +8,8 @@ Al entrar se reproduce la animación del logo. El robot se monta, el nombre sale
 - La "a" se convierte en la pala de la IA.
 - Las piezas del robot se encajan en la pelota.
 
+Después, una tarjeta pide tu nombre y muestra los controles, y empieza la partida con un marcador.
+
 **En producción:** <https://atenia-ingenia.web.app> (Firebase Hosting, proyecto `atenia-ingenia`)
 
 ## Puesta en marcha
@@ -33,7 +35,8 @@ atenia-web/
 │   └── game.js        # transformación logo → Pong, juego, IA y controles
 ├── docs/
 │   ├── MANUAL.md      # manual de uso del código: cómo cambiar cada cosa
-│   └── ARQUITECTURA.md# cómo está construido y por qué
+│   ├── ARQUITECTURA.md# cómo está construido y por qué
+│   └── typst/         # documentación en PDF (Typst) y plantilla para otros documentos
 ├── firebase.json      # configuración de Hosting y del emulador (puerto 5050)
 └── .firebaserc        # proyecto de Firebase por defecto: atenia-ingenia
 ```
@@ -42,6 +45,8 @@ atenia-web/
 
 - **[Manual de uso](docs/MANUAL.md):** cómo ejecutar, probar, cambiar textos, colores, tiempos y dificultad, y publicar.
 - **[Arquitectura](docs/ARQUITECTURA.md):** línea de tiempo de la animación, cómo funciona la transformación, el bucle del juego y las decisiones técnicas.
+- **[Documentación de proyecto (PDF)](docs/typst/Documentacion%20de%20proyecto.pdf):** todo lo anterior en un informe con capturas del funcionamiento. Fuente en `docs/typst/documentacion-proyecto.typ`.
+- **Plantilla para otros documentos:** `docs/typst/plantilla-atenia.typ` (ejemplo en `plantilla-ejemplo.typ`). Se compila con `typst compile --font-path fonts <archivo>.typ` desde `docs/typst/`.
 
 ## Controles del juego
 

@@ -11,7 +11,7 @@ firebase emulators:start --only hosting
 
 Abre <http://localhost:5050>. El emulador sirve la carpeta `public/` igual que Firebase en producción. Para pararlo, pulsa `Ctrl+C`.
 
-- **Cambias un archivo y no ves el cambio:** recarga forzando con `Ctrl+F5`. `firebase.json` permite al navegador guardar `.js` y `.css` en caché durante 1 hora.
+- **Caché:** `firebase.json` envía `Cache-Control: no-cache` en todos los archivos, así que el navegador comprueba siempre si hay versión nueva y cada cambio se ve al recargar.
 - **Otra forma sin Firebase:** cualquier servidor estático vale, por ejemplo `npx serve public` o `python -m http.server -d public 5050`. No abras `index.html` con doble clic: en `file://` algunos navegadores bloquean partes de la página.
 
 ## 2. Probar
@@ -42,13 +42,15 @@ Todos los textos de la interfaz están en español, en `public/index.html`:
 |---|---|
 | Título y descripción de la pestaña | `<title>` y `<meta name="description">` |
 | Botón "Jugar" | `<button id="play">` |
+| Tarjeta de inicio (reglas, nombre, controles) | `<form id="start">` |
+| Marcador ("A 5 PUNTOS", "Atenia IA") | `<div id="hud">` |
 | Texto de ayuda de los controles | `<p id="hint">` |
 | Botones finales | `<button id="again">` (Revancha) y `<button id="home">` (Ver el logo) |
 
 Los textos que dependen del resultado están en `public/game.js`:
 
-- "¡Has ganado!" / "Gana la IA": en la función `point()`.
-- Las etiquetas "TÚ" / "IA" del campo: en `drawField()`.
+- "¡Has ganado, _nombre_!" / "Gana la IA": en la función `point()`.
+- El nombre del marcador ("Tú" si no escribes ninguno): en `renderHud()`.
 
 ### Colores
 
@@ -92,7 +94,7 @@ Todo está en `public/game.js`:
 | Tamaño de las palas | `layout()`: `ph = fh * 0.2` | 20 % del alto del campo |
 | Tamaño de la pelota | `layout()`: `ball.r` | 2,8 % del ancho del campo |
 
-Para que la IA sea **más difícil**, sube su velocidad o baja su error. Para que sea **más fácil**, haz lo contrario.
+Para que la IA sea **más difícil**, sube su velocidad o baja su error. Para que sea **más fácil**, haz lo contrario. Si cambias `WIN_SCORE`, cambia también los textos "5 puntos" de la tarjeta de inicio y del marcador.
 
 ### Sustituir el logo
 
