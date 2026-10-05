@@ -38,8 +38,8 @@
     placeHud();
     P = Object.assign(P || { y: field.y + fh / 2 - ph / 2 }, sizes, { x: field.x + 22 });
     AI = Object.assign(AI || { y: field.y + fh / 2 - ph / 2 }, sizes, { x: field.x + fw - 22 - pw });
-    ball = ball || { x: field.x + fw / 2, y: field.y + fh / 2, vx: 0, vy: 0, spin: 0 };
-    ball.r = Math.max(16, fw * 0.028);
+    ball = ball || { x: field.x + fw / 2, y: field.y + fh / 2, vx: 0, vy: 0 };
+    ball.r = Math.max(7, fw * 0.012);
   }
 
   // ---------- marcador ----------
@@ -72,29 +72,9 @@
     rr(cx - a / 2, cy - t / 2, a, t, t * 0.3, BG);
     ctx.globalAlpha = 1;
   }
-  // Icono del robot tal y como está en el logo (coordenadas de la placa de 140×140 del SVG original)
-  const ROBOT = {
-    head: { x: 48.5, y: 18, w: 43, h: 22.6, r: 11.3, c: NAVY },
-    eyeL: { x: 57.5, y: 25.3, w: 8, h: 8, r: 4, c: GREEN },
-    eyeR: { x: 74.5, y: 25.3, w: 8, h: 8, r: 4, c: GREEN },
-    body: { x: 57.6, y: 46.3, w: 24.9, h: 61, r: 5.7, c: NAVY },
-    cv: { x: 67.2, y: 55.3, w: 5.7, h: 15.8, r: 1.4, c: '#FFFFFF' },
-    ch: { x: 62.1, y: 60.4, w: 15.8, h: 5.7, r: 1.4, c: '#FFFFFF' },
-    base: { x: 38.3, y: 113, w: 63.3, h: 9, r: 4.5, c: TEAL },
-  };
-  const PIECES = ['base', 'body', 'cv', 'ch', 'head', 'eyeL', 'eyeR'];   // orden de pintado
-  function drawTile(alpha, glow) {
-    ctx.save(); ctx.globalAlpha = alpha;
-    if (glow > 0) { ctx.shadowColor = GREEN; ctx.shadowBlur = 22 * glow; }
-    ctx.beginPath(); ctx.roundRect(0, 0, 140, 140, 32); ctx.fillStyle = '#FFFFFF'; ctx.fill();
-    ctx.shadowBlur = 0; ctx.lineWidth = 3; ctx.strokeStyle = '#D5DCE3'; ctx.stroke();
-    ctx.restore();
-  }
-  function drawBall(x, y, r, spin = 0, glow = 0) {
-    ctx.save(); ctx.translate(x, y); ctx.rotate(spin); ctx.scale(r * 2 / 140, r * 2 / 140); ctx.translate(-70, -70);
-    drawTile(1, glow);
-    for (const k of PIECES) { const p = ROBOT[k]; rr(p.x, p.y, p.w, p.h, p.r, p.c); }
-    ctx.restore();
+  function drawBall(x, y, r, glow = 1) {
+    ctx.save(); ctx.shadowColor = GREEN; ctx.shadowBlur = 18 * glow;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = GREEN; ctx.fill(); ctx.restore();
   }
   function drawField(alpha) {
     ctx.globalAlpha = alpha;
@@ -115,50 +95,32 @@
   playBtn.addEventListener('click', () => {
     playBtn.classList.remove('show'); playBtn.disabled = true;
     layout();
-    const svg = $('logo'), unit = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
-    // origen: cada pieza del robot del logo, en coordenadas de pantalla
-    const src = { head: $('head').querySelector('rect'), eyeL: $('eyeL'), eyeR: $('eyeR'), body: $('body'), cv: $('cv'), ch: $('ch'), base: $('base') };
-    const from = {};
-    for (const k of PIECES) { from[k] = box(src[k]); from[k].r = ROBOT[k].r * from[k].w / ROBOT[k].w; }
+    const from = { body: box($('body')), base: box($('base')), eye: box($('eyeR')) };
     canvas.classList.add('on');
-    ['head', 'body', 'cross', 'base', 'shine'].forEach((id) => $(id).style.visibility = 'hidden');
-    // destino: las mismas piezas encajadas dentro de la pelota
-    const k2 = ball.r * 2 / 140, bx = ball.x - ball.r, by = ball.y - ball.r;
-    const to = {};
-    for (const k of PIECES) { const p = ROBOT[k]; to[k] = { x: bx + p.x * k2, y: by + p.y * k2, w: p.w * k2, h: p.h * k2, r: p.r * k2 }; }
-    // "Aten" se funde en tu pala y la "a" en la de la IA
-    const toward = (id, tx, ty, delay) => {
-      const el = $(id), r = el.getBoundingClientRect();
-      const dx = (tx - (r.left + r.width / 2)) / unit, dy = (ty - (r.top + r.height / 2)) / unit;
-      el.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${dx}px,${dy}px) scale(.15)`, opacity: 0 }],
-        { duration: 800, delay, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'forwards' });
+    // las piezas que viajan pasan al canvas; el resto del logo sale volando
+    ['body', 'cross', 'base', 'eyeR'].forEach((id) => $(id).style.visibility = 'hidden');
+    const fly = { LA: [-420, -120, -40], Lt: [-260, -260, 30], Le: [-120, 260, -25], Ln: [40, -300, 35], La: [380, 140, 40], tagline: [0, 220, 0], head: [0, -260, -30], eyeL: [-200, -200, 0] };
+    for (const [id, [dx, dy, rot]] of Object.entries(fly)) {
+      const el = $(id); if (!el) continue;
+      el.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${dx}px,${dy}px) rotate(${rot}deg) scale(.6)`, opacity: 0 }],
+        { duration: 650, easing: 'cubic-bezier(.55,0,.75,.4)', fill: 'forwards' });
+    }
+    const to = {
+      body: { x: P.x, y: P.y, w: P.w, h: P.h },
+      base: { x: AI.x, y: AI.y, w: AI.w, h: AI.h },
+      eye: { x: ball.x - ball.r, y: ball.y - ball.r, w: ball.r * 2, h: ball.r * 2 },
     };
-    const pc = { x: P.x + P.w / 2, y: P.y + P.h / 2 }, ac = { x: AI.x + AI.w / 2, y: AI.y + AI.h / 2 };
-    ['LA', 'Lt', 'Le', 'Ln'].forEach((id, i) => toward(id, pc.x, pc.y, i * 60));
-    toward('La', ac.x, ac.y, 120);
-    $('tagline').animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(40px)', opacity: 0 }], { duration: 500, fill: 'forwards' });
-
-    const t0 = performance.now(), DUR = 1200, DELAY = 150;
+    const t0 = performance.now(), DUR = 1100, DELAY = 250;
     function morph(now) {
-      const raw = Math.min(1, Math.max(0, (now - t0 - DELAY) / DUR));
+      const raw = Math.min(1, Math.max(0, (now - t0 - DELAY) / DUR)), t = ease(raw);
+      const at = (k) => ({ x: lerp(from[k].x, to[k].x, t), y: lerp(from[k].y, to[k].y, t), w: lerp(from[k].w, to[k].w, t), h: lerp(from[k].h, to[k].h, t) });
       ctx.clearRect(0, 0, W, H);
       drawField(Math.max(0, (raw - .5) * 2));
-      // palas: crecen desde su centro mientras llegan las letras
-      const g = ease(Math.min(1, Math.max(0, (raw - .35) / .65)));
-      if (g > 0) {
-        ctx.globalAlpha = g;
-        drawPlayer(P.x, pc.y - P.h * g / 2, P.w, P.h * g, g);
-        rr(AI.x, ac.y - AI.h * g / 2, AI.w, AI.h * g, AI.w / 2, TEAL);
-        ctx.globalAlpha = 1;
-      }
-      // la placa blanca de la pelota aparece al final, detrás de las piezas
-      const tileA = Math.max(0, (raw - .65) / .35);
-      if (tileA > 0) { ctx.save(); ctx.translate(bx, by); ctx.scale(k2, k2); drawTile(tileA, tileA); ctx.restore(); }
-      PIECES.forEach((k, i) => {
-        const t = ease(Math.min(1, Math.max(0, (raw - i * 0.03) / (1 - 6 * 0.03))));
-        const f = from[k], d = to[k], p = ROBOT[k];
-        rr(lerp(f.x, d.x, t), lerp(f.y, d.y, t), lerp(f.w, d.w, t), lerp(f.h, d.h, t), lerp(f.r, d.r, t), p.c);
-      });
+      const b = at('body'), s = at('base'), e = at('eye');
+      drawPlayer(b.x, b.y, b.w, b.h, 1);
+      rr(s.x, s.y, s.w, s.h, Math.min(s.w, s.h) / 2, TEAL);
+      // el ojo da un saltito antes de convertirse en pelota
+      drawBall(e.x + e.w / 2, e.y + e.h / 2 - Math.sin(t * Math.PI) * 60, e.w / 2, t);
       if (raw < 1) return requestAnimationFrame(morph);
       intro.classList.add('gone');
       draw();
@@ -174,7 +136,7 @@
     ball.x = field.x + field.w / 2; ball.y = field.y + field.h / 2;
     const ang = (Math.random() * 0.6 - 0.3);
     const sp = field.w * 0.55;
-    ball.vx = Math.cos(ang) * sp * dir; ball.vy = Math.sin(ang) * sp; ball.spin = 0;
+    ball.vx = Math.cos(ang) * sp * dir; ball.vy = Math.sin(ang) * sp;
     serveAt = performance.now() + 800;
   }
   startBox.addEventListener('submit', (e) => {
@@ -200,7 +162,7 @@
     ball.vx = Math.cos(ang) * sp * dir; ball.vy = Math.sin(ang) * sp;
     ball.x = dir > 0 ? p.x + p.w + ball.r : p.x - ball.r;
     aiErr = (Math.random() - .5) * p.h * 0.9;                     // la IA no es perfecta
-    flash = 1.4;
+    flash = 1;
   }
   function point(who) {
     score[who]++;
@@ -230,7 +192,6 @@
     clampP(AI);
     if (now < serveAt) return;
     ball.x += ball.vx * dt; ball.y += ball.vy * dt;
-    ball.spin += Math.sign(ball.vx) * dt * 4;
     if (ball.y - ball.r < field.y) { ball.y = field.y + ball.r; ball.vy = Math.abs(ball.vy); }
     if (ball.y + ball.r > field.y + field.h) { ball.y = field.y + field.h - ball.r; ball.vy = -Math.abs(ball.vy); }
     if (ball.vx < 0 && ball.x - ball.r <= P.x + P.w && ball.x > P.x && ball.y > P.y - ball.r && ball.y < P.y + P.h + ball.r) hitPaddle(P, 1);
@@ -243,8 +204,8 @@
     drawField(1);
     drawPlayer(P.x, P.y, P.w, P.h);
     rr(AI.x, AI.y, AI.w, AI.h, AI.w / 2, TEAL);
-    const visible = running;
-    if (visible) drawBall(ball.x, ball.y, ball.r, ball.spin, flash);
+    const visible = running && performance.now() >= serveAt - 400;
+    if (visible) drawBall(ball.x, ball.y, ball.r, 1 + flash);
     flash = Math.max(0, flash - 0.08);
   }
   function loop() {
