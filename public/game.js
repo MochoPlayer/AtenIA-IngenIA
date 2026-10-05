@@ -1,8 +1,8 @@
 // Atenia: logo intro → Pong contra la IA.
 // El cuerpo del robot se convierte en tu pala, la base teal en la pala de la IA y un ojo en la pelota.
 (() => {
-  const NAVY = '#13294B', TEAL = '#12A39A', GREEN = '#22C55E', BG = '#F7F9FB', GREY = '#5C6B7A';
-  const INTRO_MS = 5600;      // la animación del logo termina hacia los 5.7 s
+  const NAVY = '#13294B', TEAL = '#12A39A', GREEN = '#FF7A1A', BG = '#F7F9FB', GREY = '#5C6B7A';
+  const INTRO_MS = 4300;      // la animación del logo termina hacia los 4.4 s
   const WIN_SCORE = 5;
 
   const $ = (id) => document.getElementById(id);
